@@ -1,0 +1,119 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+}
+
+.container {
+    width: 80%;
+    max-width: 1200px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+h1 {
+    color: #333;
+    font-size: 28px;
+    margin-bottom: 20px;
+}
+
+form {
+    margin-bottom: 20px;
+}
+
+input[type="text"] {
+    width: 60%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#results {
+    margin-top: 20px;
+    text-align: left;
+}
+
+.result-item {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #fafafa;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.result-item h2 {
+    font-size: 22px;
+    color: #007bff;
+    margin-bottom: 10px;
+    text-decoration: none;
+}
+
+.result-item p {
+    font-size: 16px;
+    color: #333;
+    margin: 8px 0;
+}
+
+.result-item .authors {
+    font-weight: bold;
+    color: #333;
+}
+
+.result-item img {
+    max-width: 200px;
+    max-height: 150px;
+    margin-top: 10px;
+    border-radius: 5px;
+}
+
+.result-item a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.result-item a:hover {
+    text-decoration: underline;
+}
+
+#stored-queries {
+    margin-top: 30px;
+    text-align: left;
+}
+
+#stored-queries h3 {
+    color: #333;
+}
+
+#stored-queries ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#stored-queries li {
+    margin-bottom: 5px;
+    font-size: 16px;
+    color: #555;
+}

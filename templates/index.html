@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patent Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        #results h2 {
+            color: #333;
+        }
+        #results a {
+            color: blue;
+            text-decoration: none;
+        }
+        #results a:hover {
+            text-decoration: underline;
+        }
+        #results p {
+            font-size: 14px;
+            color: #555;
+        }
+        #results img {
+            max-width: 200px;
+            margin: 10px 0;
+        }
+        #stored-queries {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Enter Search Query for Patent</h1>
+    <form id="search-form">
+        <input type="text" id="query" placeholder="Enter query..." required>
+        <button type="submit">Search</button>
+    </form>
+
+    <div id="results"></div>
+    <div id="stored-queries"></div>
+
+    <script>
+        document.getElementById('search-form').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const query = document.getElementById('query').value;
+            
+            // Fetch results from the backend
+            const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
+            const data = await response.json();
+
+            const resultsDiv = document.getElementById('results');
+            const queriesDiv = document.getElementById('stored-queries');
+
+            // Clear previous results and stored queries
+            resultsDiv.innerHTML = '<h2>Search Results:</h2>';
+            queriesDiv.innerHTML = '<h3>Stored Search Queries:</h3>';
+
+            if (data.error) {
+                resultsDiv.innerHTML += `<p>${data.error}</p>`;
+            } else {
+                // Display patent results (titles, authors, descriptions, images) returned by the backend
+                if (data.results && data.results.length > 0) {
+                    data.results.forEach(result => {
+                        // Create a clickable link for each patent title
+                        const p = document.createElement('p');
+                        
+                        const link = document.createElement('a');
+                        link.href = `https://patents.google.com/patent/${result.id}/en`;  // The patent full URL
+                        link.textContent = result.title;  // The patent title
+                        link.target = '_blank';  // Open the link in a new tab
+
+                        const authors = document.createElement('p');
+                        authors.textContent = `Authors: ${result.authors}`;  // Display authors
+
+                        const description = document.createElement('p');
+                        description.textContent = `Description: ${result.description}`;  // Display description
+
+                        // Add image (if available)
+                        if (result.image) {
+                            const image = document.createElement('img');
+                            image.src = result.image;  // Image URL
+                            resultsDiv.appendChild(image);
+                        }
+
+                        // Append each result
+                        p.appendChild(link);
+                        resultsDiv.appendChild(p);
+                        resultsDiv.appendChild(authors);
+                        resultsDiv.appendChild(description);
+                    });
+                } else {
+                    resultsDiv.innerHTML += '<p>No results found.</p>';
+                }
+
+                // Display stored search queries
+                const queryList = data.queries.map(query => `<li>${query}</li>`).join('');
+                queriesDiv.innerHTML += `<ul>${queryList}</ul>`;
+            }
+        });
+    </script>
+</body>
+</html>
