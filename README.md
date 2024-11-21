@@ -36,15 +36,15 @@ To run InnoPatent locally, follow these easy steps!
    ```bash
    git clone https://github.com/arnav108276/InnoPatent.git
    cd InnoPatent
-  ###Create virtual environment
+  ### Create virtual environment
   
     python -m venv venv
     source venv/bin/activate  # On Windows, use: venv\Scripts\activate
-###Install dependencies
+### Install dependencies
 
      pip install -r req.txt
 
-  #Activate server
+  ### Activate server
 
     waitress-serve --port=port_no. directory_name.back:app
 :bar_chart: Contributing
