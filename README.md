@@ -48,7 +48,7 @@ To run InnoPatent locally, follow these easy steps!
 
     waitress-serve --port=port_no. directory_name.back:app
 :bar_chart: Contributing
-#  We welcome contributions! Follow these steps to contribute:
+##  We welcome contributions! Follow these steps to contribute:
 
 - Fork the repository.
 - Create a new branch (git checkout -b feature-name).
