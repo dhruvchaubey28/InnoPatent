@@ -5,9 +5,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
 app = Flask(__name__)
-
 # Global list to store input data
 search_queries = []
 
@@ -21,7 +19,6 @@ def scrape_data(query):
     driver = webdriver.Chrome(service=Service(r'C:\Users\Arnav\DSA\.vscode\.vscode\EDGE 2024\pattern\minor1\app\chromedriver.exe'), options=chrome_options)
     
     results = []
-    
     try:
         for page in range(1, 3):  # Loop through pages 1 to 2 (adjust page range as needed)
             url = f"https://patents.google.com/?q={query}&oq={query}&page={page}"
