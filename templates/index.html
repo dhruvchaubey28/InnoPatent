@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patent Search</title>
+    <title>Innopatent
+    </title>
+    <link rel="icon" href="{{ url_for('static', filename='Favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
         #results {
             margin-top: 20px;
+            text-decoration: solid;
         }
         #results h2 {
             color: #333;
@@ -36,14 +36,26 @@
     </style>
 </head>
 <body>
-    <h1>Enter Search Query for Patent</h1>
-    <form id="search-form">
-        <input type="text" id="query" placeholder="Enter query..." required>
-        <button type="submit">Search</button>
-    </form>
+    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Patent Engine Logo" class="top-logo">
 
+    <!-- Search Container -->
+    <div class="search-container">s
+        <form id="search-form" class="search-form">
+            <input
+                type="text"
+                id="query"
+                class="search-bar"
+                name="query"
+                placeholder="Search by inventor, category, or keyword..."
+                required
+            >
+            <button type="submit" class="search-btn">Search</button>
+        </form>
+    </div>
+
+    <!-- Results Section -->
     <div id="results"></div>
-    <div id="stored-queries"></div>
+   
 
     <script>
         document.getElementById('search-form').addEventListener('submit', async (event) => {
@@ -58,8 +70,7 @@
             const queriesDiv = document.getElementById('stored-queries');
 
             // Clear previous results and stored queries
-            resultsDiv.innerHTML = '<h2>Search Results:</h2>';
-            queriesDiv.innerHTML = '<h3>Stored Search Queries:</h3>';
+            resultsDiv.innerHTML = '<h1>Search Results:</h1>';
 
             if (data.error) {
                 resultsDiv.innerHTML += `<p>${data.error}</p>`;
