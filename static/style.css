@@ -27,8 +27,8 @@ body {
     margin-bottom: 20px;
     border-radius: 8px;
     position: fixed;
-    top:40px;
-    left:60px;
+    top: 40px;
+    left: 60px;
 }
 
 /* Wrapper for search container */
@@ -61,7 +61,8 @@ body {
     transition: box-shadow 0.2s;
     margin-bottom: 12px;
 }
-.search-bar:hover{
+
+.search-bar:hover {
     width: 100%;
     max-width: 500px;
     padding: 15px 20px;
@@ -171,3 +172,4 @@ body {
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
     text-align: center;
 }
+    
