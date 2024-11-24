@@ -5,67 +5,61 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-app = Flask(__name__)
-# Global list to store input data
-search_queries = []
-
+import random
+import logging
+app = Flask(__name__, static_folder='static', template_folder='templates')
+    # Configure logging to suppress unwanted messages
+logging.basicConfig(level=logging.ERROR)  # This will suppress most logs (set to WARNING/ERROR)
+    # Fitness function to calculate relevance of a result to the target query
+def fitness(result, target_query):
+    title_score = target_query.lower() in result['title'].lower()  # Check if the query is in the title
+    description_score = target_query.lower() in result['description'].lower()  # Check if the query is in the description
+    return title_score * 2 + description_score  # Title is more important
+    # Grey Wolf Optimization (GWO) to optimize the search results
+def gwo_optimize_results(results, target_query):
+    wolves = results.copy()  # Copy results as wolves
+    wolves_fitness = [(wolf, fitness(wolf, target_query)) for wolf in wolves]
+    wolves_fitness.sort(key=lambda x: x[1], reverse=True)
+    alpha = wolves_fitness[0][0]
+    beta = wolves_fitness[1][0]
+    delta = wolves_fitness[2][0]
+    rest = [wolf[0] for wolf in wolves_fitness[3:]]
+    return [alpha, beta, delta] + rest
+    # Function to scrape patent data
 def scrape_data(query):
     """Scrape patent data from multiple pages based on the query."""
     chrome_options = Options()
     chrome_options.add_argument('--headless')  # Run in headless mode
     chrome_options.add_argument('--disable-gpu')
-
-    # Path to chromedriver
-    driver = webdriver.Chrome(service=Service(r'C:\Users\Arnav\DSA\.vscode\.vscode\EDGE 2024\pattern\minor1\app\chromedriver.exe'), options=chrome_options)
-    
+    chrome_options.add_argument('--log-level=3')  # Suppress logs
+    # Initialize a new WebDriver for each query
+    driver = webdriver.Chrome(service=Service(r'chromedriver.exe'), options=chrome_options)
     results = []
     try:
-        for page in range(1, 3):  # Loop through pages 1 to 2 (adjust page range as needed)
+        for page in range(1, 2):                           # Loop through pages (adjust page range as needed)
             url = f"https://patents.google.com/?q={query}&oq={query}&page={page}"
-            driver.get(url)
-            
-            # Wait until the section containing results is fully loaded
+            driver.get(url)                                # Wait until the section containing results is fully loaded
             try:
                 section = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, 'section.style-scope.search-results'))
+                    EC.presence_of_element_located((By.CSS_SELECTOR,'section.style-scope.search-results'))
                 )
-                
-                # Extract all the search-result-item elements inside the section
                 result_items = section.find_elements(By.CSS_SELECTOR, 'search-result-item')
-                
-                if not result_items:
-                    print(f"No results found on page {page}.")
-                
-                # Extract title, authors, description (from htmlContent), patent ID, image, and link
                 for item in result_items:
                     try:
-                        # Extract the title (htmlContent)
                         title_element = item.find_element(By.CSS_SELECTOR, '#htmlContent')
                         title = title_element.text.strip() if title_element else 'No title'
-
-                        # Extract description (content inside <span id="htmlContent">)
                         description_element = item.find_element(By.CSS_SELECTOR, '#htmlContent')
                         description = description_element.text.strip() if description_element else 'No description available'
-
-                        # Extract authors (if available)
                         authors = ""
                         authors_element = item.find_elements(By.CSS_SELECTOR, '.style-scope.search-result-item')
                         if authors_element:
                             authors = authors_element[0].text.strip()
-
-                        # Extract the patent unique ID (for the URL redirect)
                         patent_id_element = item.find_element(By.CSS_SELECTOR, '[data-proto="OPEN_PATENT_PDF"]')
                         patent_id = patent_id_element.text.strip() if patent_id_element else 'No patent ID'
-
-                        # Extract the link of the patent (redirect to the full patent page)
                         patent_link_element = item.find_element(By.TAG_NAME, 'a')
                         patent_url = patent_link_element.get_attribute('href') if patent_link_element else None
-
-                        # Extract the patent image (if available)
                         image_element = item.find_elements(By.CSS_SELECTOR, 'img')
                         image_url = image_element[0].get_attribute('src') if image_element else None
-
-                        # Store title, description, patent ID, image, and link as a dictionary
                         results.append({
                             'title': title, 
                             'description': description,
@@ -75,47 +69,27 @@ def scrape_data(query):
                             'url': patent_url
                         })
                     except Exception as e:
-                        print(f"Error extracting data from item: {e}")
-            
+                        pass                          # Silently ignore errors
             except Exception as e:
-                print(f"Error loading results for page {page}: {e}")
-    
+                pass                             # Silently ignore errors
     except Exception as e:
-        print(f"Error: {e}")
-    
+        pass                                 # Silently ignore errors
     finally:
-        driver.quit()
-    
+        driver.quit()                             # Close the WebDriver once scraping is complete
+    if results:
+        results = gwo_optimize_results(results, query)    # 
     return results
-
 @app.route('/')
 def home():
-    """Serve the frontend HTML."""
     return render_template('index.html')
-
 @app.route('/search', methods=['GET'])
 def search():
-    """Handle search requests from the frontend and store query in list."""
     query = request.args.get('query')
     if not query:
         return jsonify({"error": "Query parameter is required"}), 400
-    
-    # Store the query in the list
-    search_queries.append(query)
-
-    # Perform scraping with the query
     results = scrape_data(query)
-    
-    # Include the list of all search queries at the end of the response
     return jsonify({
-        'results': results,
-        'queries': search_queries
+        'results': results
     })
-
-@app.route('/queries', methods=['GET'])
-def get_queries():
-    """Return all stored queries."""
-    return jsonify(search_queries)
-
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5009)
+    app.run(debug=True, host='127.0.0.1', port=5013)
