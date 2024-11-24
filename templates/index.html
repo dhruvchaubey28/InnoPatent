@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Innopatent
-    </title>
+    <title>Innopatent</title>
     <link rel="icon" href="{{ url_for('static', filename='Favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <style>
@@ -39,7 +38,7 @@
     <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Patent Engine Logo" class="top-logo">
 
     <!-- Search Container -->
-    <div class="search-container">s
+    <div class="search-container">
         <form id="search-form" class="search-form">
             <input
                 type="text"
@@ -55,7 +54,6 @@
 
     <!-- Results Section -->
     <div id="results"></div>
-   
 
     <script>
         document.getElementById('search-form').addEventListener('submit', async (event) => {
@@ -82,12 +80,12 @@
                         const p = document.createElement('p');
                         
                         const link = document.createElement('a');
-                        link.href = `https://patents.google.com/patent/${result.id}/en`;  // The patent full URL
+                        link.href = result.url;  // The patent full URL
                         link.textContent = result.title;  // The patent title
                         link.target = '_blank';  // Open the link in a new tab
 
                         const authors = document.createElement('p');
-                        authors.textContent = `Authors: ${result.authors}`;  // Display authors
+                        authors.textContent = `Authors: ${result.authors || 'N/A'}`;  // Display authors (if available)
 
                         const description = document.createElement('p');
                         description.textContent = `Description: ${result.description}`;  // Display description
@@ -95,7 +93,8 @@
                         // Add image (if available)
                         if (result.image) {
                             const image = document.createElement('img');
-                            image.src = result.image;  // Image URL
+                            image.src = result.image;  // Image URL from backend
+                            image.alt = "Patent Image";  // Alt text for image
                             resultsDiv.appendChild(image);
                         }
 
@@ -110,8 +109,8 @@
                 }
 
                 // Display stored search queries
-                const queryList = data.queries.map(query => `<li>${query}</li>`).join('');
-                queriesDiv.innerHTML += `<ul>${queryList}</ul>`;
+                const queryList = data.queries ? data.queries.map(query => `<li>${query}</li>`).join('') : '';
+                queriesDiv.innerHTML = queryList ? `<ul>${queryList}</ul>` : '';
             }
         });
     </script>
