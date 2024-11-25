@@ -43,10 +43,6 @@ To run InnoPatent locally, follow these easy steps!
 ### Install dependencies
 
      pip install -r req.txt
-### Install drivers
-    playwrigh install
-
-
 
   ### Activate server
 
