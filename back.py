@@ -32,8 +32,7 @@ def gwo_optimize_results(results, target_query):
 # Scrape Google Patents data
 def scrape_google_patents(query):
     chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--disable-gpu')
+    #chrome_options.add_argument('--headless')
     driver = webdriver.Chrome(service=Service(r'chromedriver.exe'), options=chrome_options)
     results = []
     try:
@@ -41,7 +40,7 @@ def scrape_google_patents(query):
             url = f"https://patents.google.com/?q={query}&oq={query}&page={page}"
             driver.get(url)
             try:
-                section = WebDriverWait(driver, 10).until(
+                section = WebDriverWait(driver, 2).until(
                     EC.presence_of_element_located((By.CSS_SELECTOR, 'section.style-scope.search-results'))
                 )
                 result_items = section.find_elements(By.CSS_SELECTOR, 'search-result-item')
@@ -74,8 +73,7 @@ def scrape_google_patents(query):
 # Scrape Espacenet data and map to Google Patents
 def scrape_espacenet(query):
     chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--disable-gpu')
+    #chrome_options.add_argument('--headless')
     driver = webdriver.Chrome(service=Service(r'chromedriver.exe'), options=chrome_options)
     results = []
     try:
@@ -83,7 +81,7 @@ def scrape_espacenet(query):
             url = f"https://worldwide.espacenet.com/patent/search?q={query}&page={page}"
             driver.get(url)
             try:
-                items = WebDriverWait(driver, 10).until(
+                items = WebDriverWait(driver, 2).until(
                     EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'article.item--wSceB4di'))
                 )
                 for item in items:
@@ -113,7 +111,7 @@ def scrape_espacenet(query):
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('index2end.html')
 
 @app.route('/search', methods=['GET'])
 def search():
@@ -128,7 +126,7 @@ def search():
 
     # Debugging: log the image URLs to ensure they are correct
     for result in optimized_results:
-        print(f"Image URL: {result.get('image')}")
+        print(".")
 
     return jsonify({'results': optimized_results})
 
