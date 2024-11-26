@@ -118,7 +118,7 @@ def scrape_espacenet(query):
 
 @app.route('/')
 def home():
-    return render_template('index2end.html')
+    return render_template('index.html')
 
 @app.route('/search', methods=['GET'])
 def search():
