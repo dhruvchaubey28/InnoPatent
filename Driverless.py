@@ -6,6 +6,7 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 import logging
 import time
+import os
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
@@ -133,4 +134,5 @@ def search():
     return jsonify({'results': optimized_results})
 
 if __name__ == '__main__':
-    app.run(debug=True, host='127.0.0.1', port=5013)
+    port = int(os.environ.get('PORT', 5013))
+    app.run(debug=True, host='0.0.0.0', port=port)
