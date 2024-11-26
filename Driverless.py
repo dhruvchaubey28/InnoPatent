@@ -6,9 +6,7 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 import logging
 import time
-
 app = Flask(__name__, static_folder='static', template_folder='templates')
-
 # Configure logging to suppress unwanted messages
 logging.basicConfig(level=logging.ERROR)
 
