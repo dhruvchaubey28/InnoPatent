@@ -6,7 +6,9 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 import logging
 import time
+
 app = Flask(__name__, static_folder='static', template_folder='templates')
+
 # Configure logging to suppress unwanted messages
 logging.basicConfig(level=logging.ERROR)
 
@@ -35,7 +37,7 @@ def gwo_optimize_results(results, target_query):
 # Setup Chrome WebDriver using webdriver-manager
 def get_chrome_driver():
     chrome_options = Options()
-    #chrome_options.add_argument('--headless')  # Headless mode
+    chrome_options.add_argument('--headless')  # Headless mode
     chrome_options.add_argument('--no-sandbox')
 
     # Automatically fetch and setup the right ChromeDriver version
@@ -44,91 +46,105 @@ def get_chrome_driver():
     return driver
 
 # Scrape Google Patents data
-def scrape_google_patents(query):
+def scrape_google_patents(query,page_num):
     results = []
     driver = get_chrome_driver()
 
     try:
-        for page_num in range(1, 2):  # Adjust page range as needed
-            url = f"https://patents.google.com/?q={query}&oq={query}&page={page_num}"
-            driver.get(url)
-            time.sleep(2)  # Allow page to load
-            result_items = driver.find_elements(By.CSS_SELECTOR, 'search-result-item')
-            
-            for item in result_items:
-                try:
-                    title = item.find_element(By.CSS_SELECTOR, '#htmlContent').text.strip()
-                    description = item.find_element(By.CSS_SELECTOR, '#htmlContent').text.strip()
-                    patent_id = item.find_element(By.CSS_SELECTOR, '[data-proto="OPEN_PATENT_PDF"]').text.strip()
-                    authors = item.find_elements(By.CSS_SELECTOR, '.style-scope.search-result-item')[0].text.strip()
-                    patent_url = f"https://patents.google.com/patent/{patent_id}/en"
-                    image_url = item.find_element(By.CSS_SELECTOR, 'img').get_attribute('src')
+        url = f"https://patents.google.com/?q={query}&oq={query}&page={page_num}"
+        driver.get(url)
+        time.sleep(5)  # Allow page to load
+        result_items = driver.find_elements(By.CSS_SELECTOR, 'search-result-item')
 
-                    results.append({
-                        'title': title,
-                        'description': description,
-                        'authors': authors,
-                        'id': patent_id,
-                        'url': patent_url,
-                        'image': image_url  # Include the image URL in the result
-                    })
-                except Exception as e:
-                    print(f"Error extracting patent info: {e}")
-                    pass
+        for item in result_items:
+            try:
+                title = item.find_element(By.CSS_SELECTOR, '#htmlContent').text.strip()
+                description = item.find_element(By.CSS_SELECTOR, '#htmlContent').text.strip()
+                patent_id = item.find_element(By.CSS_SELECTOR, '[data-proto="OPEN_PATENT_PDF"]').text.strip()
+                authors = item.find_elements(By.CSS_SELECTOR, '.style-scope.search-result-item')[0].text.strip()
+                patent_url = f"https://patents.google.com/patent/{patent_id}/en"
+                image_url = item.find_element(By.CSS_SELECTOR, 'img').get_attribute('src')
+
+                results.append({
+                    'title': title,
+                    'description': description,
+                    'authors': authors,
+                    'id': patent_id,
+                    'url': patent_url,
+                    'image': image_url  # Include the image URL in the result
+                })
+            except Exception as e:
+                print(f"Error extracting patent info: {e}")
+                pass
     finally:
         driver.quit()
     return results
 
 # Scrape Espacenet data and map to Google Patents
-def scrape_espacenet(query):
+
+def scrape_espacenet(query, page_num):
     results = []
     driver = get_chrome_driver()
 
     try:
-        for page_num in range(1, 2):  # Adjust page range as needed
-            url = f"https://worldwide.espacenet.com/patent/search?q={query}&page={page_num}"
-            driver.get(url)
-            time.sleep(2)  # Allow page to load
-            items = driver.find_elements(By.CSS_SELECTOR, 'article.item--wSceB4di')
+        url = f"https://worldwide.espacenet.com/patent/search?q={query}&page={page_num}"
+        driver.get(url)
+        time.sleep(5)  # Allow page to load
+        items = driver.find_elements(By.CSS_SELECTOR, 'article.item--wSceB4di')
 
-            for item in items:
-                try:
-                    title = item.find_element(By.CSS_SELECTOR, 'header.h2--2VrrSjFb').text.strip()
-                    description = item.find_element(By.CSS_SELECTOR, '.copy-text--uk738M73').text.strip()
-                    patent_id = item.find_element(By.TAG_NAME, 'a').get_attribute('href').split('/')[-1]
-                    patent_url = f"https://patents.google.com/patent/{patent_id}/en"
-                    image_url = item.find_element(By.CSS_SELECTOR, 'img').get_attribute('src') if item.find_element(By.CSS_SELECTOR, 'img') else None
+        for item in items:
+            try:
+                title = item.find_element(By.CSS_SELECTOR, 'header.h2--2VrrSjFb').text.strip()
+                description = item.find_element(By.CSS_SELECTOR, '.copy-text--uk738M73').text.strip()
+                patent_id = item.find_element(By.TAG_NAME, 'a').get_attribute('href').split('/')[-1]
+                patent_url = f"https://patents.google.com/patent/{patent_id}/en"
+                image_url = item.find_element(By.CSS_SELECTOR, 'img').get_attribute('src') if item.find_element(By.CSS_SELECTOR, 'img') else None
 
-                    results.append({
-                        'title': title,
-                        'description': description,
-                        'id': patent_id,
-                        'url': patent_url,
-                        'image': image_url  # Include the image URL in the result if available
-                    })
-                except Exception as e:
-                    print(f"Error extracting patent info: {e}")
-                    pass
+                results.append({
+                    'title': title,
+                    'description': description,
+                    'id': patent_id,
+                    'url': patent_url,
+                    'image': image_url  # Include the image URL in the result if available
+                })
+            except Exception as e:
+                print(f"Error extracting patent info: {e}")
+                pass
     finally:
         driver.quit()
+
     return results
+
 
 @app.route('/')
 def home():
     return render_template('index.html')
 
 @app.route('/search', methods=['GET'])
+
 def search():
     query = request.args.get('query')
+    page = request.args.get('page', 1, type=int)  
+
     if not query:
         return jsonify({"error": "Query parameter is required"}), 400
 
-    google_results = scrape_google_patents(query)
-    espacenet_results = scrape_espacenet(query)
-    combined_results = google_results + espacenet_results
-    optimized_results = gwo_optimize_results(combined_results, query)
+    try:
+        # Fetch results based on query and page
+        google_results = scrape_google_patents(query, page)
+        espacenet_results = scrape_espacenet(query, page)
+        combined_results = google_results + espacenet_results
 
-    return jsonify({'results': optimized_results})
+        # Optimize results using GWO
+        optimized_results = gwo_optimize_results(combined_results, query)
+
+        return jsonify({
+            'results': optimized_results,
+            'page': page 
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='127.0.0.1', port=5013)
