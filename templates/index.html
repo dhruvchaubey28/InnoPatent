@@ -1,144 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Innopatent
     </title>
     <link rel="icon" href="{{ url_for('static', filename='Favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="../static/style.css">
     <style>
-        #results {
-            margin-top: 20px;
-            text-decoration: solid;
-            min-height: 400px; /* Add minimum height to prevent layout shifts */
-        }
-        #results h2 {
-            color: #333;
-        }
-        #results a {
-            color: blue;
-            text-decoration: none;
-        }
-        #results a:hover {
-            text-decoration: underline;
-        }
-        #results p {
-            font-size: 14px;
-            color: #555;
-        }
-        #results img {
-            max-width: 200px;
-            margin: 10px 0;
-        }
-        #stored-queries {
-            margin-top: 20px;
-        }
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
-        }
-        .page-btn {
-            padding: 10px;
-            margin: 0 5px;
-            cursor: pointer;
-        }
-        .page-btn.active {
-            background-color: #007BFF;
-            color: white;
-        }
-        .page-btn:disabled {
-            cursor: not-allowed;
-            background-color: #ccc;
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-        .loading.active {
-            display: block;
-        }
+      #results {
+        margin-top: 20px;
+        text-decoration: solid;
+        min-height: 400px;
+        /* Add minimum height to prevent layout shifts */
+      }
+
+      #results h2 {
+        color: #333;
+      }
+
+      #results a {
+        color: blue;
+        text-decoration: none;
+      }
+
+      #results a:hover {
+        text-decoration: underline;
+      }
+
+      #results p {
+        font-size: 14px;
+        color: #555;
+      }
+
+      #results img {
+        max-width: 200px;
+        margin: 10px 0;
+      }
+
+      #stored-queries {
+        margin-top: 20px;
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+      }
+
+      .page-btn {
+        padding: 10px;
+        margin: 0 5px;
+        cursor: pointer;
+      }
+
+      .page-btn.active {
+        background-color: #007BFF;
+        color: white;
+      }
+
+      .page-btn:disabled {
+        cursor: not-allowed;
+        background-color: #ccc;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .loading.active {
+        display: block;
+      }
     </style>
-</head>
+  </head>
 
-<body>
-    <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Patent Engine Logo" class="top-logo">
+  <body>
+    <div class="root-container">
+      <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Patent Engine Logo" class="top-logo">
 
-    <!-- Search Container -->
-    <div class="search-container">
-        <form id="search-form" class="search-form">
-            <input
-                type="text"
-                id="query"
-                class="search-bar"
-                name="query"
-                placeholder="Search by inventor, category, or keyword..."
-                required
-            >
+      <div class="container">
+        <!-- Search Container -->
+        <div class="search-container">
+          <form id="search-form" class="search-form">
+            <input type="text" id="query" class="search-bar" name="query" placeholder="Search by inventor, category, or keyword..." required>
             <button type="submit" class="search-btn">Search</button>
-        </form>
-    </div>
+          </form>
+        </div>
 
-    <!-- Loading indicator -->
-    <div id="loading" class="loading">
-        Searching patents...
-    </div>
+        <!-- Loading indicator -->
+        <div id="loading" class="loading">
+          Searching patents...
+        </div>
 
-    <!-- Results Section -->
-    <div id="results"></div>
-   
+        <!-- Results Section -->
+        <div id="results"></div>
+  
+
     <!-- Pagination Section -->
     <div class="pagination">
-        <button class="page-btn prev-btn" disabled>&lt;</button>
-        <div class="page-numbers"></div>
-        <button class="page-btn next-btn">&gt;</button>
+      <button class="page-btn prev-btn" disabled>&lt;</button>
+      <div class="page-numbers"></div>
+      <button class="page-btn next-btn">&gt;</button>
     </div>
+  </div>
+</div>
 
     <!-- Replace the existing <script> section with this -->
-<script>
-    let currentPage = 1;
-    let currentQuery = '';
-    let totalPages = 5; // Set this based on your backend response
-    
-    // Function to update URL with current page and query
-    function updateURL(page, query) {
+    <script>
+      let currentPage = 1;
+      let currentQuery = '';
+      let totalPages = 5; // Set this based on your backend response
+
+      // Function to update URL with current page and query
+      function updateURL(page, query) {
         const url = new URL(window.location);
         url.searchParams.set('page', page);
         if (query) url.searchParams.set('query', query);
         window.history.pushState({}, '', url);
-    }
+      }
 
-    // Function to generate pagination buttons
-    function generatePaginationButtons() {
+      // Function to generate pagination buttons
+      function generatePaginationButtons() {
         const pageNumbers = document.querySelector('.page-numbers');
         pageNumbers.innerHTML = '';
-        
-        for (let i = 1; i <= totalPages; i++) {
-            const button = document.createElement('button');
-            button.className = `page-btn ${i === currentPage ? 'active' : ''}`;
-            button.textContent = i;
-            button.addEventListener('click', () => handlePageClick(i));
-            pageNumbers.appendChild(button);
-        }
-    }
 
-    // Function to handle page navigation
-    async function handlePageClick(page) {
+        for (let i = 1; i <= totalPages; i++) {
+          const button = document.createElement('button');
+          button.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+          button.textContent = i;
+          button.addEventListener('click', () => handlePageClick(i));
+          pageNumbers.appendChild(button);
+        }
+      }
+
+      // Function to handle page navigation
+      async function handlePageClick(page) {
         if (page === currentPage) return;
-        
+
         currentPage = page;
         updateURL(page, currentQuery);
         await fetchResults(currentQuery, page);
-        
+
         // Update pagination buttons
         document.querySelectorAll('.page-btn').forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.textContent === page.toString()) {
-                btn.classList.add('active');
-            }
+          btn.classList.remove('active');
+          if (btn.textContent === page.toString()) {
+            btn.classList.add('active');
+          }
         });
 
         // Update prev/next buttons
@@ -147,71 +159,71 @@
 
         // Scroll to top of results
         document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
-    }
+      }
 
-    // Function to fetch results
-    async function fetchResults(query, page) {
+      // Function to fetch results
+      async function fetchResults(query, page) {
         const loading = document.getElementById('loading');
         loading.classList.add('active');
-        
+
         try {
-            const response = await fetch(`/search?query=${encodeURIComponent(query)}&page=${page}`);
-            const data = await response.json();
-            
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = `<h1>Search Results for "${query}"</h1>`;
+          const response = await fetch(`/search?query=${encodeURIComponent(query)}&page=${page}`);
+          const data = await response.json();
 
-            if (data.error) {
-                resultsDiv.innerHTML += `<p>${data.error}</p>`;
-            } else {
-                if (data.results && data.results.length > 0) {
-                    data.results.forEach(result => {
-                        const resultItem = document.createElement('div');
-                        resultItem.className = 'result-item';
-                        
-                        const titleLink = document.createElement('h1');
-                        const link = document.createElement('a');
-                        link.href = result.url;
-                        link.textContent = result.title;
-                        link.target = '_blank';
-                        titleLink.appendChild(link);
+          const resultsDiv = document.getElementById('results');
+          resultsDiv.innerHTML = `<h1>Search Results for "${query}"</h1>`;
 
-                        const patentInfo = document.createElement('p');
-                        patentInfo.innerHTML = `
+          if (data.error) {
+            resultsDiv.innerHTML += `<p>${data.error}</p>`;
+          } else {
+            if (data.results && data.results.length > 0) {
+              data.results.forEach(result => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+
+                const titleLink = document.createElement('h1');
+                const link = document.createElement('a');
+                link.href = result.url;
+                link.textContent = result.title;
+                link.target = '_blank';
+                titleLink.appendChild(link);
+
+                const patentInfo = document.createElement('p');
+                patentInfo.innerHTML = `
                             <strong>Patent Number:</strong> ${result.id}<br>
-                            <strong>Inventors:</strong> ${result.authors}
+                            <strong>Description:</strong> ${result.authors}
                         `;
 
-                        const description = document.createElement('p');
-                        description.innerHTML = `<strong>Description:</strong> ${result.description}`;
+                const description = document.createElement('p');
+                // description.innerHTML = `<strong>Description:</strong> ${result.description}`;
 
-                        if (result.image) {
-                            const image = document.createElement('img');
-                            image.src = result.image;
-                            image.alt = result.title;
-                            resultItem.appendChild(image);
-                        }
-
-                        resultItem.appendChild(titleLink);
-                        resultItem.appendChild(patentInfo);
-                        resultItem.appendChild(description);
-                        
-                        resultsDiv.appendChild(resultItem);
-                    });
-                } else {
-                    resultsDiv.innerHTML += '<p>No results found.</p>';
+                if (result.image) {
+                  const image = document.createElement('img');
+                  image.src = result.image;
+                  image.alt = result.title;
+                  resultItem.appendChild(image);
                 }
-            }
-        } catch (error) {
-            console.error('Error fetching results:', error);
-            document.getElementById('results').innerHTML = '<p>Error fetching results. Please try again.</p>';
-        } finally {
-            loading.classList.remove('active');
-        }
-    }
 
-    // Event listener for search form
-    document.getElementById('search-form').addEventListener('submit', async (event) => {
+                resultItem.appendChild(titleLink);
+                resultItem.appendChild(patentInfo);
+                resultItem.appendChild(description);
+
+                resultsDiv.appendChild(resultItem);
+              });
+            } else {
+              resultsDiv.innerHTML += '<p>No results found.</p>';
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching results:', error);
+          document.getElementById('results').innerHTML = '<p>Error fetching results. Please try again.</p>';
+        } finally {
+          loading.classList.remove('active');
+        }
+      }
+
+      // Event listener for search form
+      document.getElementById('search-form').addEventListener('submit', async (event) => {
         event.preventDefault();
         const query = document.getElementById('query').value;
         currentQuery = query;
@@ -219,41 +231,38 @@
         updateURL(1, query);
         await fetchResults(query, 1);
         generatePaginationButtons();
-    });
+      });
 
-    // Event listeners for prev/next buttons
-    document.querySelector('.prev-btn').addEventListener('click', () => {
+      // Event listeners for prev/next buttons
+      document.querySelector('.prev-btn').addEventListener('click', () => {
         if (currentPage > 1) {
-            handlePageClick(currentPage - 1);
+          handlePageClick(currentPage - 1);
         }
-    });
+      });
 
-    document.querySelector('.next-btn').addEventListener('click', () => {
+      document.querySelector('.next-btn').addEventListener('click', () => {
         if (currentPage < totalPages) {
-            handlePageClick(currentPage + 1);
+          handlePageClick(currentPage + 1);
         }
-    });
+      });
 
-    // Initialize pagination
-    generatePaginationButtons();
+      // Initialize pagination
+      generatePaginationButtons();
 
-    // Check URL for initial page and query
-    window.addEventListener('load', () => {
+      // Check URL for initial page and query
+      window.addEventListener('load', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const page = parseInt(urlParams.get('page')) || 1;
         const query = urlParams.get('query');
-        
+
         if (query) {
-            document.getElementById('query').value = query;
-            currentQuery = query;
-            currentPage = page;
-            fetchResults(query, page);
-            generatePaginationButtons();
+          document.getElementById('query').value = query;
+          currentQuery = query;
+          currentPage = page;
+          fetchResults(query, page);
+          generatePaginationButtons();
         }
-    });
-</script>
-</body>
+      });
+    </script>
+  </body>
 </html>
-
-
-

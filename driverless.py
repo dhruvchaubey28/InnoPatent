@@ -1,5 +1,3 @@
-
-
 from flask import Flask, request, jsonify, render_template
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -70,7 +68,7 @@ def scrape_google_patents(query):
                         'title': title,
                         'description': description,
                         'authors': authors,
-                        'id': patent_id,
+                        'id':  f'<span style="color: red;">{patent_id}</span>',
                         'url': patent_url,
                         'image': image_url  # Include the image URL in the result
                     })
@@ -104,7 +102,7 @@ def scrape_espacenet(query):
                     results.append({
                         'title': title,
                         'description': description,
-                        'id': patent_id,
+                        'id':  f'<span style="color: red;">{patent_id}</span>',
                         'url': patent_url,
                         'image': image_url  # Include the image URL in the result if available
                     })
