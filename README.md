@@ -8,7 +8,7 @@
 <img src="https://github.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/assets/74038190/72903324-cf57-4e90-80a6-ed3c9734e0ed" width="900">
 
 
-InnoPatent is a modern patent search engine that lets you explore patents with ease. It helps users efficiently search, explore, and view detailed patent information, including **title**, **authors**, **description**, and **associated images**. The web app scrapes data from **Google Patents** and presents it in a **visually appealing** format.
+InnoPatent is a modern patent search engine that lets you explore patents with ease. It helps users efficiently search, explore, and view detailed patent information, including **title**, **authors**, **description**, and **associated images**. The web app scrapes data from **Google Patents** and **Espacenet**.
 
 ### :telescope: **Features**
 
