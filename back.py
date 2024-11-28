@@ -1,10 +1,14 @@
+import time
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 from flask import Flask, request, jsonify, render_template
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import logging
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -29,86 +33,113 @@ def gwo_optimize_results(results, target_query):
     rest = [wolf[0] for wolf in wolves_fitness[3:]]
     return [alpha, beta, delta] + rest if beta and delta else [alpha]
 
-# Scrape Google Patents data
-def scrape_google_patents(query):
+def setup_chrome_driver():
     chrome_options = Options()
     chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--disable-gpu')
-    driver = webdriver.Chrome(service=Service(r'chromedriver.exe'), options=chrome_options)
-    results = []
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--window-size=1920,1080')
+    
+    # Add user agent to mimic browser
+    chrome_options.add_argument('user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36')
+    
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+    driver.implicitly_wait(2)  # Default wait time
+    return driver
+
+def safe_find_element(container, selector_type, selector, default='N/A'):
     try:
-        for page in range(1, 2):  # Adjust page range as needed
-            url = f"https://patents.google.com/?q={query}&oq={query}&page={page}"
-            driver.get(url)
-            try:
-                section = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, 'section.style-scope.search-results'))
-                )
-                result_items = section.find_elements(By.CSS_SELECTOR, 'search-result-item')
-                for item in result_items:
-                    try:
-                        title = item.find_element(By.CSS_SELECTOR, '#htmlContent').text.strip()
-                        description = item.find_element(By.CSS_SELECTOR, '#htmlContent').text.strip()
-                        patent_id = item.find_element(By.CSS_SELECTOR, '[data-proto="OPEN_PATENT_PDF"]').text.strip()
-                        authors = item.find_elements(By.CSS_SELECTOR, '.style-scope.search-result-item')[0].text.strip()
-                        patent_url = f"https://patents.google.com/patent/{patent_id}/en"
-                        image_url = item.find_element(By.CSS_SELECTOR, 'img').get_attribute('src')  # Update based on your page structure
-                        results.append({
-                            'title': title,
-                            'description': description,
-                            'authors': authors,
-                            'id': patent_id,
-                            'url': patent_url,
-                            'image': image_url  # Include the image URL in the result
-                        })
-                    except Exception as e:
-                        print(f"Error extracting patent info: {e}")
-                        pass
-            except Exception as e:
-                print(f"Error finding section: {e}")
-                pass
+        element = container.find_element(selector_type, selector)
+        return element.text.strip()
+    except NoSuchElementException:
+        return default
+
+def scrape_google_patents(query):
+    driver = setup_chrome_driver()
+    results = []
+    
+    try:
+        url = f"https://patents.google.com/?q={query}&oq={query}"
+        driver.get(url)
+        
+        # Enhanced wait and error handling
+        try:
+            WebDriverWait(driver, 3).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'search-result-item'))
+            )
+            time.sleep(2)  # Additional buffer for page load
+            
+            # More generic selectors
+            result_items = driver.find_elements(By.CSS_SELECTOR, 'search-result-item')
+            
+            for item in result_items:
+                title = safe_find_element(item, By.XPATH, './/*[contains(@class, "title")]')
+                description = safe_find_element(item, By.XPATH, './/*[contains(@class, "description")]')
+                patent_id = safe_find_element(item, By.CSS_SELECTOR, '[data-proto="OPEN_PATENT_PDF"]')
+                
+                result = {
+                    'source': 'Google Patents',
+                    'title': title,
+                    'description': description,
+                    'id': patent_id,
+                    'url': f"https://patents.google.com/patent/{patent_id}/en" if patent_id != 'N/A' else ''
+                }
+                
+                results.append(result)
+        
+        except (TimeoutException, WebDriverException) as e:
+            print(f"Error scraping Google Patents: {e}")
+    
     finally:
         driver.quit()
+    
     return results
 
-# Scrape Espacenet data and map to Google Patents
 def scrape_espacenet(query):
-    chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--disable-gpu')
-    driver = webdriver.Chrome(service=Service(r'chromedriver.exe'), options=chrome_options)
+    driver = setup_chrome_driver()
     results = []
+    
     try:
-        for page in range(1, 2):  # Adjust page range as needed
-            url = f"https://worldwide.espacenet.com/patent/search?q={query}&page={page}"
-            driver.get(url)
-            try:
-                items = WebDriverWait(driver, 10).until(
-                    EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'article.item--wSceB4di'))
-                )
-                for item in items:
-                    try:
-                        title = item.find_element(By.CSS_SELECTOR, 'header.h2--2VrrSjFb').text.strip()
-                        description = item.find_element(By.CSS_SELECTOR, '.copy-text--uk738M73').text.strip()
-                        patent_id = item.find_element(By.TAG_NAME, 'a').get_attribute('href').split('/')[-1]
-                        patent_url = f"https://patents.google.com/patent/{patent_id}/en"
-                        # Espacenet doesn't always have images, so we handle it as an optional field
-                        image_url = item.find_element(By.CSS_SELECTOR, 'img').get_attribute('src') if item.find_element(By.CSS_SELECTOR, 'img') else None
-                        results.append({
-                            'title': title,
-                            'description': description,
-                            'id': patent_id,
-                            'url': patent_url,
-                            'image': image_url  # Include the image URL in the result if available
-                        })
-                    except Exception as e:
-                        print(f"Error extracting patent info: {e}")
-                        pass
-            except Exception as e:
-                print(f"Error finding items: {e}")
-                pass
+        url = f"https://worldwide.espacenet.com/patent/search?q={query}"
+        driver.get(url)
+        
+        try:
+            WebDriverWait(driver, 3).until(
+                EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'article'))
+            )
+            time.sleep(2)  # Additional buffer
+            
+            # More flexible selectors
+            result_items = driver.find_elements(By.CSS_SELECTOR, 'article')
+            
+            for item in result_items:
+                title = safe_find_element(item, By.CSS_SELECTOR, 'h2, .title')
+                description = safe_find_element(item, By.CSS_SELECTOR, 'p, .description')
+                
+                try:
+                    patent_link = item.find_element(By.TAG_NAME, 'a')
+                    patent_url = patent_link.get_attribute('href')
+                    patent_id = patent_url.split('/')[-1] if patent_url else 'N/A'
+                except NoSuchElementException:
+                    patent_url = ''
+                    patent_id = 'N/A'
+                
+                result = {
+                    'source': 'Espacenet',
+                    'title': title,
+                    'description': description,
+                    'id': patent_id,
+                    'url': patent_url
+                }
+                
+                results.append(result)
+        
+        except (TimeoutException, WebDriverException) as e:
+            print(f"Error scraping Espacenet: {e}")
+    
     finally:
         driver.quit()
+    
     return results
 
 @app.route('/')
@@ -125,10 +156,6 @@ def search():
     espacenet_results = scrape_espacenet(query)
     combined_results = google_results + espacenet_results
     optimized_results = gwo_optimize_results(combined_results, query)
-
-    # Debugging: log the image URLs to ensure they are correct
-    for result in optimized_results:
-        print(f"Image URL: {result.get('image')}")
 
     return jsonify({'results': optimized_results})
 
